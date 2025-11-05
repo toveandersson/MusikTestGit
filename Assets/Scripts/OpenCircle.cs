@@ -9,12 +9,7 @@ public class OpenCircle : MonoBehaviour
     public GameObject circle;
     public GameObject cancel;
     bool ool = true;
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
+    
     void Update()
     {
         if (Input.GetKeyUp(KeyCode.Space))

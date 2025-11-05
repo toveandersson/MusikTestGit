@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,10 +7,12 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using static Unity.Burst.Intrinsics.X86;
+using static UnityEditor.PlayerSettings;
 
 public class Logic : MonoBehaviour
 {
     SoundLogic soundLogic;
+    public GameObject buttonPrefab;
 
     public Toggle durToggle;
     public Toggle mollToggle;
@@ -38,6 +41,8 @@ public class Logic : MonoBehaviour
     private Dictionary<string, string> spegelIntervallDict = new Dictionary<string, string> {
         { "L2", "S7" }, { "S2", "L7" }, { "L3", "S6" }, { "S3", "L6/S5" }, { "R4", "R5" }, { "S4/L5", "S4/L5" }, { "R5", "R4" }, { "S5/L6", "S3" }, { "S6", "L3" }, { "L7", "S2" }, { "S7", "L2" }};
 
+    private string[] circleOfFifths = { "C", "G", "D", "A", "E", "B", "F#/Gb", "C#/Db", "G#/Ab", "D#/Eb", "A#/Bb", "F" };
+
     public Content currentButton = new Content();
     public Dictionary<string, string> currentDictionary;
 
@@ -58,8 +63,6 @@ public class Logic : MonoBehaviour
 
     void Start()
     {
-        soundLogic = FindAnyObjectByType<SoundLogic>();
-
         kvinter = new Content();
         kvinter.dur = new Dictionary<string, string>{
         { "C", "G" }, { "G", "D" }, { "D", "A" }, { "A", "E" }, { "E", "B" }, { "B", "F#" }, { "F#", "C#" }, { "Gb", "Db" }, { "Db", "Ab" }, { "Ab", "Eb" }, { "Eb", "Bb" }, { "Bb", "F" }, { "F", "C" }};
@@ -81,6 +84,14 @@ public class Logic : MonoBehaviour
         mollparalleller = new Content();
         spegelIntervall = new Content();
         ool = true;
+
+        CreateButton(new Vector3(-2.5f, 4.5f, 0), "Kvinter", kvinter, kvinter.all);
+        CreateButton(new Vector3(0, 4.5f, 0), "Förtecken", förtecken, förtecken.all);
+        CreateButton(new Vector3(2.5f, 4.5f, 0), "Mollparalleller", mollparalleller, mollparallellDict);
+        CreateButton(new Vector3(-2.5f, 3.5f, 0), "Spegelintervall", spegelIntervall, spegelIntervallDict);
+
+        soundLogic = FindAnyObjectByType<SoundLogic>();
+        CreateSoundButton();
     }
 
     public void ScreenClick()
@@ -89,17 +100,43 @@ public class Logic : MonoBehaviour
         OnClick();
     }
 
+    private void CreateButton(Vector3 pos, string titleText, Logic.Content button, Dictionary<string,string> currentDict)
+    {
+        buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = titleText;
+        GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
+        var.GetComponent<Button>().onClick.AddListener(() => {
+            Debug.Log("button pressed");
+            currentButton = button;
+            currentDictionary = currentDict;
+            title.text = titleText;
+            Nollställ();
+            OnClick();
+        });
+        var.transform.position = pos;
+    }
+
+    private void CreateSoundButton() {
+        buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "Ljud";
+        GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
+        var.GetComponent<Button>().onClick.AddListener(() => {
+            soundLogic.JoniskIntervall();
+            OnClick();
+        });
+        Nollställ();
+        var.transform.position = new Vector3(0f, 3.5f, 0);
+    }
+    
     public void OnClick()
     {
         Debug.Log("hej" + currentButton + currentDictionary);
-        if (currentButton == null) { return; }
+        if (currentButton == null) { Debug.Log("currentnull"); return; }
         if (currentButton == soundLogic.ljud)
         {
             Debug.Log("current:: "+currentButton);
             soundLogic.PlayAgain();
             return;
         }
-        if (currentDictionary == null) { return; }
+        if (currentDictionary == null) { Debug.Log("currentdictnull"); return; }
 
         if (ool == false)
         {
@@ -128,8 +165,9 @@ public class Logic : MonoBehaviour
             int oldNum = num;
             while (oldNum == num)
             {
-                num = Random.Range(0, currentDictionary.Count);
+                num = UnityEngine.Random.Range(0, currentDictionary.Count);
             }
+            Debug.Log("should prompt");
 
             Prompt(num);
         }
@@ -141,7 +179,7 @@ public class Logic : MonoBehaviour
                 Debug.Log("returning on 2, " + num + currentDictionary.Count);
                 return;
             }
-
+            Debug.Log("should answer");
             Answer();
         }
     }
@@ -200,38 +238,6 @@ public class Logic : MonoBehaviour
                 currentDictionary = currentButton.all;
             }
         }
-    }
-
-    public void Kvinter()
-    {
-        currentButton = kvinter;
-        currentDictionary = currentButton.all;
-        title.text = "Kvinter";
-        Nollställ();
-    }
-
-    public void Förtecken()
-    {
-        currentButton = förtecken;
-        currentDictionary = currentButton.all;
-        title.text = "Förtecken";
-        Nollställ();
-    }
-
-    public void Mollparalleller()
-    {
-        currentButton = mollparalleller;
-        currentDictionary = mollparallellDict;
-        title.text = "Mollparalleller";
-        Nollställ();
-    }
-
-    public void SpegelIntervall()
-    {
-        currentButton = spegelIntervall;
-        currentDictionary = spegelIntervallDict;
-        title.text = "Spegelintervall";
-        Nollställ();
     }
 
     private void Nollställ()

@@ -78,7 +78,7 @@ public class SoundLogic : MonoBehaviour
             Debug.Log("soundscript null ");
             return;
         }
-        soundPlayerVar.PlayNote(frequencies[note], .4f);
+        soundPlayerVar.PlayNote(frequencies[note], 2f);
         if (soundPlayerVar == soundPlayer)
         {
             AddOvertones(note, soundPlayers);
@@ -154,15 +154,15 @@ public class SoundLogic : MonoBehaviour
 
     private void AddOvertones(int startNote, Sound[] soundPLayers)
     {
-        int note = startNote;
-        int modulo = 24 + 12;
-        for (int i = 0; i < 5; i++)
-        {
-            step = overtoneSeries[i];
-            Debug.Log("overtone: " + frequencies[note + overtoneSeries[i] % modulo]);
-            soundPLayers[i].PlayNote(frequencies[note], Random.Range(0.05f, 0.15f));
-            note = note + overtoneSeries[i] % modulo;
-        }
+        //int note = startNote;
+        //int modulo = 24 + 12;
+        //for (int i = 0; i < 5; i++)
+        //{
+        //    step = overtoneSeries[i];
+        //    Debug.Log("overtone: " + frequencies[note + overtoneSeries[i] % modulo]);
+        //    soundPLayers[i].PlayNote(frequencies[note], Random.Range(0.05f, 0.15f));
+        //    note = note + overtoneSeries[i] % modulo;
+        //}
     }
 
     private IEnumerator StopSoundCoroutine(Sound soundPlayer, float delay)
