@@ -12,7 +12,7 @@ public class OpenCircle : MonoBehaviour
     
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.Space))
+        if (Input.GetKeyUp(KeyCode.K))
         {
             circle.SetActive(ool);
             cancel.SetActive(ool);

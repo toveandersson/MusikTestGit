@@ -1,7 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Logic;
 
 public class SoundLogic : MonoBehaviour
 {
@@ -19,8 +19,11 @@ public class SoundLogic : MonoBehaviour
     1046.50f, 1108.73f, 1174.66f, 1244.51f, 1318.51f, 1396.91f, 1479.98f, 1567.98f, 1661.22f, 1760.00f, 1864.66f, 1975.53f,
     //Octave 7
     2093.00f, 2217.46f, 2349.32f, 2489.02f, 2637.02f, 2793.83f, 2959.96f, 3135.96f, 3322.44f, 3520.00f, 3729.31f, 3951.07f };
+    
+    
 
-    Dictionary<int, string> intervalNames = new Dictionary<int, string>(){
+
+Dictionary<int, string> intervalNames = new Dictionary<int, string>(){
     { 0, "1" },   { 1, "b2" }, { 2, "2" }, { 3, "b3" }, { 4, "3" }, { 5, "4" },{ 6, "+4 / b5" }, { 7, "5" }, { 8, "+5 / b6" },{ 9, "6" }, { 10, "b7" }, { 11, "7" },{ 12, "8" }};
 
     List<int> overtoneSeries = new List<int>() { 12, 7, 5, 4, 4 };
@@ -39,13 +42,13 @@ public class SoundLogic : MonoBehaviour
     private Coroutine CallLjudWithDelayCoroutine;
     private Coroutine StopSoundCoroutineCoroutine;
 
-    public Content ljud;
+    //public Content ljud;
 
     // Start is called before the first frame update
     void Start()
     {
         logic = FindAnyObjectByType<Logic>();
-        ljud = new Content();
+        //ljud = new Content();
 
         Debug.Log(frequencies.Count);
 
@@ -78,7 +81,7 @@ public class SoundLogic : MonoBehaviour
             Debug.Log("soundscript null ");
             return;
         }
-        soundPlayerVar.PlayNote(frequencies[note], 2f);
+        soundPlayerVar.PlayNote(frequencies[note], 1.6f);
         if (soundPlayerVar == soundPlayer)
         {
             AddOvertones(note, soundPlayers);
@@ -89,6 +92,20 @@ public class SoundLogic : MonoBehaviour
         }
     }
 
+    public void PlayNote(string note)
+    {
+        Debug.Log("note: "+note);
+        int index = Array.IndexOf(StaticLibrary.notesInOrder, note);
+        Debug.Log("index: " + index);
+
+        if (soundPlayer == null || soundPlayer2 == null)
+        {
+            Debug.Log("soundscript null ");
+            return;
+        }
+        soundPlayer.PlayNote(frequencies[24+index], 1.6f);
+    }
+
     public void PlayAgain()
     {
         float delay = simultaneousNotes ? 0f : .6f;
@@ -96,9 +113,10 @@ public class SoundLogic : MonoBehaviour
         StartCoroutine(CallLjudWithDelay(delay, step2));
         StartCoroutine(StopSoundCoroutine(soundPlayer2, 1f));
     }
+
     public void JoniskIntervall()
     {
-        logic.currentButton = ljud;
+        //logic.currentButton = ljud;
 
         soundPlayer.StopPlaying();
         soundPlayer2.StopPlaying();
@@ -114,13 +132,13 @@ public class SoundLogic : MonoBehaviour
         int note = 24; // startstep
         int oldStep = step;
         int oldStep2 = step2;
-        step = note + joniskIntervall[Random.Range(0, 7)];
-        step2 = note + joniskIntervall[Random.Range(0, 7)];
+        step = note + joniskIntervall[UnityEngine.Random.Range(0, 7)];
+        step2 = note + joniskIntervall[UnityEngine.Random.Range(0, 7)];
 
         while (step == step2 || (step == oldStep && step2 == oldStep2))
         {
-            step = note + joniskIntervall[Random.Range(0, 7)];
-            step2 = note + joniskIntervall[Random.Range(0, 7)];
+            step = note + joniskIntervall[UnityEngine.Random.Range(0, 7)];
+            step2 = note + joniskIntervall[UnityEngine.Random.Range(0, 7)];
         }
         Debug.Log("step 1 " + step + " step 2 " + step2);
 

@@ -23,7 +23,7 @@ public class Sound : MonoBehaviour
         audioSource.spatialBlend = 0f; // force 2D sound
     }
 
-    public void PlayNote(float hertz, float volume = 0.2f)
+    public void PlayNote(float hertz, float volume = 1f)
     {
         frequency = hertz;
         amplitude = Mathf.Clamp01(volume);
