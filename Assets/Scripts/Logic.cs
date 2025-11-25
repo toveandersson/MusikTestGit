@@ -17,6 +17,8 @@ public class Logic : MonoBehaviour
     public Toggle mollToggle;
     public bool dur;
     public bool moll;
+    private bool initButtonFunc;
+    private int interval = 0;
 
     public TextMeshProUGUI startText;
     public TextMeshProUGUI title;
@@ -28,9 +30,9 @@ public class Logic : MonoBehaviour
     public string answer;
 
     int num = 1;
-    public bool ool = true;
+    public bool answerBool = false;
 
-    int[] currentScaleIntervalsInt;
+    public int[] currentScaleIntervalsInt;
     private Action clickFunction;
 
     public class Content
@@ -66,10 +68,9 @@ public class Logic : MonoBehaviour
         public Content spegelIntervall = new Content();
     }
 
-
     void Start()
     {
-        currentScaleIntervalsInt = StaticLibrary.majorScaleIntervals;
+        currentScaleIntervalsInt = MyLib.majorScaleIntervals;
         noteSheet = FindAnyObjectByType<NoteSheet>();
         soundLogic = FindAnyObjectByType<SoundLogic>();
         //kvinter = new Content();
@@ -92,7 +93,7 @@ public class Logic : MonoBehaviour
 
         //mollparalleller = new Content();
         //spegelIntervall = new Content();
-        ool = true;
+        answerBool = false;
 
         //CreateButton(new Vector3(-2.5f, 4.5f, 0), "Kvinter", kvinter, kvinter.all);
         //CreateButton(new Vector3(0, 4.5f, 0), "Förtecken", förtecken, förtecken.all);
@@ -104,8 +105,9 @@ public class Logic : MonoBehaviour
         //Action notesOnInstrumentPractice = NotesOnInstrumentPractice;
         //Action<Action> playNote = PlayNote;
 
-        CreateButton(new Vector3(-2.5f, 4.5f, 0), "Intervall", CalculateRandomInterval, OnClick);
+        CreateButton(new Vector3(-2.5f, 4.5f, 0), "Random Interval", CalculateRandomInterval, OnClick);
         CreateButton(new Vector3(0f, 4.5f, 0), "Notes", NotesOnInstrumentPractice, PlayNote);
+        CreateButton(new Vector3(2.5f, 4.5f, 0), "Interval", CalculateInterval, OnClick);
         //CreateButton(new Vector3(-2.5f, 4.5f, 0), "Kvinter", kvinter, kvinter.all, durFörhållandeICirkeln);
         //CreateButton(new Vector3(0, 4.5f, 0), "Förtecken", förtecken, förtecken.all, durFörhållandeICirkeln);
         //CreateButton(new Vector3(2.5f, 4.5f, 0), "Mollparalleller", mollparalleller, mollparallellDict, durFörhållandeICirkeln);
@@ -113,19 +115,27 @@ public class Logic : MonoBehaviour
         //CreateSoundButton();
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            ScreenClick();
-        }
-    }
-    public void ScreenClick()
-    {
-        Debug.Log("screen clicked");
-        clickFunction();
-    }
 
+    private void CreateButton(Vector3 pos, string titleText, Action buttonFunction, Action<Action> clickFunction)
+    {
+        buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = titleText;
+        GameObject button = Instantiate(buttonPrefab, transform.parent);
+        button.transform.position = pos;
+
+        Action clickAction = delegate {
+            clickFunction(buttonFunction);
+        };
+
+        Button buttonComponent = button.GetComponent<Button>();
+        buttonComponent.onClick.AddListener(delegate {
+            //buttonFunction();       // run the button's main function
+            this.clickFunction = clickAction;  // store it globally for ScreenClick
+            answerBool = false;
+            initButtonFunc = true;
+            clickFunction(buttonFunction);
+            title.text = titleText;
+        }); 
+    }
     private void AlterMajorScale(int[] notesChanged, int[] changeInHalfSteps)
     {
         //for (int i = 0; i < currentScaleIntervalsInt.Length; i++)
@@ -142,143 +152,141 @@ public class Logic : MonoBehaviour
         }
     }
 
-    //private void CreateButton(Vector3 pos, string titleText, Logic.Content button, Dictionary<string,string> currentDict, Dictionary<string, int> förhållandeICirkeln)
-    //{
-    //    buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = titleText;
-    //    GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
-    //    //var.GetComponent<Button>().onClick.AddListener(() => {
-    //    //    Debug.Log("button pressed");
-    //    //    currentButton = button;
-    //    //    currentDictionary = currentDict;
-    //    //    title.text = titleText;
-    //    //    Nollställ();
-    //    //    OnClick();
-    //    //});
-    //    var.GetComponent<Button>().onClick.AddListener(() => {
-    //        Debug.Log("button pressed");
-    //        //currentButton = button;
-    //        num = UnityEngine.Random.Range(0, circleOfFifths.Length -1); // - 1 här?????? ifall längden inte är från 0 vilket jag inte tror
-    //        var förhållandeICirkelnKey = spegelIntervallDict.ElementAt(UnityEngine.Random.Range(0, spegelIntervallDict.Count)).Key; //ändra från spegelintervalldict till korrekt med korrekt intervall som finns i förhållande i cirkeln listan!
-    //        var hej = förhållandeICirkeln[förhållandeICirkelnKey];
-    //        var answer = circleOfFifths[num + förhållandeICirkeln[förhållandeICirkelnKey] % circleOfFifths.Length -1];
-    //        currentDictionary = currentDict;
-    //        title.text = titleText;
-    //        Nollställ();
-    //        OnClick();
-    //    });
-    //    var.transform.position = pos;
-    //}
-
-    private void CreateButton(Vector3 pos, string titleText, Action buttonFunction, Action<Action> clickWithButtonFunc)
-    {
-        var allIntervals = StaticLibrary.intervalsList;
-        var majorIntervals = StaticLibrary.majorScaleIntervals;
-
-        buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = titleText;
-        GameObject varButton = Instantiate(buttonPrefab, this.gameObject.transform.parent);
-
-        // capture the correct function for this button
-        Action buttonAction = delegate {
-            clickWithButtonFunc(buttonFunction);
-        };
-
-        Button buttonComponent = varButton.GetComponent<Button>();
-        buttonComponent.onClick.AddListener(delegate {
-            buttonFunction();       // run the button's main function
-            clickFunction = buttonAction;  // store it globally for ScreenClick
-        });
-
-        varButton.transform.position = pos;
-        title.text = titleText;
-    }
-
-
-
     private void CalculateInterval(int noteNumInCircle, int interval)
     {
 
     }
 
+    //-- BUTTON FUNCTIONS
     private void CalculateRandomInterval()
     {
-        var allIntervalsString = StaticLibrary.intervalsList;
-
+        Debug.Log("RANDOM INT");
+        if (initButtonFunc)
+        {
+            //noteSheet.ShowSystem(200);
+        }
         int oldNum = num;
         while (oldNum == num)
         {
-            num = UnityEngine.Random.Range(0, StaticLibrary.circleOfFifths.Length);
+            num = UnityEngine.Random.Range(0, MyLib.circleOfFifths.Length);
         }
-        prompt = StaticLibrary.circleOfFifths[num];
+        prompt = MyLib.circleOfFifths[num];
         var randomInterval = currentScaleIntervalsInt.ElementAt(UnityEngine.Random.Range(1, currentScaleIntervalsInt.Length));
-        var randomIntervalString = StaticLibrary.intervalsList[randomInterval];
-        Debug.Log(num +" : "+ StaticLibrary.circleOfFifths[num]);
-        var answerIndex = Math.Abs(num + StaticLibrary.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString).Value) % (StaticLibrary.circleOfFifths.Length);
-        Debug.Log("answ index "+answerIndex);
-        answer = StaticLibrary.circleOfFifths[answerIndex];
+        var randomIntervalString = MyLib.intervalsList[randomInterval];
+        var answerIndex = Math.Abs(num + MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString).Value) % (MyLib.circleOfFifths.Length);
+        answer = MyLib.circleOfFifths[answerIndex];
         subTitle.text = randomIntervalString;
         Nollställ();
 
+        initButtonFunc = false;
+
+        Debug.Log(num +" : "+ MyLib.circleOfFifths[num]);
+        Debug.Log("answ index "+answerIndex);
         //Debug.Log(randomIntervalString);
-        //var intervalNameString= allIntervalsString[StaticLibrary.halfStepsToIntervalName.ElementAt(randomInterval).Key];
-        //Debug.Log("intervals: "+StaticLibrary.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString));
+        //var intervalNameString= allIntervalsString[MyLib.halfStepsToIntervalName.ElementAt(randomInterval).Key];
+        //Debug.Log("intervals: "+MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString));
         //Debug.Log("answer ind: " + answerIndex);
         //Debug.Log("prompt: "+prompt);
         //Debug.Log("answer: "+answer);
-        //StaticLibrary.halfStepsToIntervalName.FirstOrDefault(x => x.Value == randomIntervalString).Key % circleOfFifths.Length - 1];
+        //MyLib.halfStepsToIntervalName.FirstOrDefault(x => x.Value == randomIntervalString).Key % circleOfFifths.Length - 1];
+    }
+
+    private void CalculateInterval()
+    {
+        if (initButtonFunc)
+        {
+            interval += 1;
+        }
+        Debug.Log("CALC");
+        if (interval > 11) { interval = 1;  }
+        int oldNum = num;
+        while (oldNum == num)
+        {
+            num = UnityEngine.Random.Range(0, MyLib.circleOfFifths.Length);
+        }
+        prompt = MyLib.circleOfFifths[num];
+
+        var intervalString = MyLib.intervalsList[interval];
+        Debug.Log("give ninterval: "+interval);
+        Debug.Log("prompt: " + prompt);
+        Debug.Log("interval: " + intervalString + " int in circle: " + MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == intervalString).Value + " modulo : " + (MyLib.circleOfFifths.Length));
+        Debug.Log("abs " + (num + MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == intervalString).Value) % (MyLib.circleOfFifths.Length));
+
+        var intervalValue = MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == intervalString).Value;
+        var length = MyLib.circleOfFifths.Length;
+        int answerIndex = ((num + intervalValue) % length + length) % length;
+
+        //var answerIndex = Math.Abs(num + MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == intervalString).Value) % (MyLib.circleOfFifths.Length);
+        answer = MyLib.circleOfFifths[answerIndex];
+        Debug.Log("answer: " + answer);
+        subTitle.text = intervalString;
+        Nollställ();
+
+        initButtonFunc = false;
+        
     }
 
     private void NotesOnInstrumentPractice() 
     {
-        var allIntervalsString = StaticLibrary.intervalsList;
+        Debug.Log("NOTES PRACTICE");
+        var allIntervalsString = MyLib.intervalsList;
 
         int oldNum = num;
         while (oldNum == num)
         {
-            num = UnityEngine.Random.Range(0, StaticLibrary.circleOfFifths.Length);
+            num = UnityEngine.Random.Range(0, MyLib.circleOfFifths.Length);
         }
-        prompt = StaticLibrary.circleOfFifths[num];
+        prompt = MyLib.circleOfFifths[num];
         //var randomInterval = currentScaleIntervalsInt.ElementAt(UnityEngine.Random.Range(1, currentScaleIntervalsInt.Length - 1));
-        //var randomIntervalString = StaticLibrary.intervalsList[randomInterval];
-        //var answerIndex = (num + StaticLibrary.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString).Value) % (circleOfFifths.Length);
-        answer = StaticLibrary.circleOfFifths[num];
+        //var randomIntervalString = MyLib.intervalsList[randomInterval];
+        //var answerIndex = (num + MyLib.intervalsInTheCircle.FirstOrDefault(x => x.Key == randomIntervalString).Value) % (circleOfFifths.Length);
+        answer = MyLib.circleOfFifths[num];
         subTitle.text = "";
         //subTitle.text = randomIntervalString;
         Nollställ();
 
+        initButtonFunc = false;
     }
-  
+
+    //-- BUTTON FUNCTIONS ^^
+
+
+    private void Update()
+    {
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            ScreenClick();
+        }
+    }
+    public void ScreenClick()
+    {
+        Debug.Log("screen clicked");
+        clickFunction();
+    }
+
+    //-- CLICK FUNCTIONS
+
     private void PlayNote(Action buttonFunction)
     {
-        Debug.Log("sound");
-        if (ool == false)
+        Debug.Log("CLICK PLAY SOUND");
+        if (answerBool == false)
         {
             buttonFunction();
-            ool = true;
+            answerBool = true;
             Prompt();
             noteSheet.HideNote();
         }
         else
         {
-            ool = false;
+            answerBool = false;
             soundLogic.PlayNote(answer);
-            noteSheet.ShowNote(answer);
+            noteSheet.ShowNote(answer, noteSheet.wholeNote);
         }
     }
-    //private void CreateSoundButton() {
-    //    buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "Ljud"; 
-    //    GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
-    //    var.GetComponent<Button>().onClick.AddListener(() => {
-    //        //soundLogic.JoniskIntervall();
-    //        OnClick();
-    //    });
-    //    Nollställ();
-    //    var.transform.position = new Vector3(0f, 3.5f, 0);
-    //}
     
     public void OnClick(Action buttonFunction)
     {
-        Debug.Log("onclick");
-        Debug.Log(clickFunction);
+        Debug.Log("ON CLICK");
         //if (currentButton == null) { Debug.Log("currentnull"); return; }
         //if (currentButton == soundLogic.ljud)
         //{
@@ -288,9 +296,8 @@ public class Logic : MonoBehaviour
         //}
         //if (currentDictionary == null) { Debug.Log("currentdictnull"); return; }
 
-        if (ool == false)
+        if (answerBool == false)
         {
-            buttonFunction();
             //if (dur && currentButton.dur.Count != 0) 
             //{ 
             //    currentDictionary = currentButton.dur; 
@@ -312,19 +319,22 @@ public class Logic : MonoBehaviour
             //    }
             //}
 
-            ool = true;
-            
-            Debug.Log("should prompt");
-
+            buttonFunction();
             Prompt();
+            noteSheet.HideNote();
+            answerBool = true;
         }
         else
         {
-            ool = false;
-            Debug.Log("should answer");
             Answer();
+            int num = UnityEngine.Random.Range(1, 3);
+            noteSheet.ShowTwoNotes(prompt, answer, 200, num);
+            //noteSheet.ShowNote(answer, noteSheet.wholeNote, 150);
+            answerBool = false;
         }
     }
+
+    //-- CLICK FUNCTIONS^^
 
     public void Prompt()
     {
@@ -371,7 +381,7 @@ public class Logic : MonoBehaviour
             mollToggle.isOn = false;
             dur = true;
             moll = false;
-            currentScaleIntervalsInt = StaticLibrary.majorScaleIntervals;
+            currentScaleIntervalsInt = MyLib.majorScaleIntervals;
             //if (currentButton.dur.Count != 0)
             //{
             //    currentDictionary = currentButton.dur;
@@ -391,19 +401,62 @@ public class Logic : MonoBehaviour
     {
         answerText.text = "";
         promptText.text = "";
-        ool = !ool;
+        answerBool = !answerBool;
         if (promptText.text == "")
         {
-            ool = false;
+            answerBool = false;
         }
         else
         {
-            ool = true;
+            answerBool = true;
         }
     }
+
+
+
+    //private void CreateSoundButton() {
+    //    buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "Ljud"; 
+    //    GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
+    //    var.GetComponent<Button>().onClick.AddListener(() => {
+    //        //soundLogic.JoniskIntervall();
+    //        OnClick();
+    //    });
+    //    Nollställ();
+    //    var.transform.position = new Vector3(0f, 3.5f, 0);
+    //}
 }
+
+//private void CreateButton(Vector3 pos, string titleText, Logic.Content button, Dictionary<string,string> currentDict, Dictionary<string, int> förhållandeICirkeln)
+//{
+//    buttonPrefab.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = titleText;
+//    GameObject var = Instantiate(buttonPrefab, this.gameObject.transform.parent);
+//    //var.GetComponent<Button>().onClick.AddListener(() => {
+//    //    Debug.Log("button pressed");
+//    //    currentButton = button;
+//    //    currentDictionary = currentDict;
+//    //    title.text = titleText;
+//    //    Nollställ();
+//    //    OnClick();
+//    //});
+//    var.GetComponent<Button>().onClick.AddListener(() => {
+//        Debug.Log("button pressed");
+//        //currentButton = button;
+//        num = UnityEngine.Random.Range(0, circleOfFifths.Length -1); // - 1 här?????? ifall längden inte är från 0 vilket jag inte tror
+//        var förhållandeICirkelnKey = spegelIntervallDict.ElementAt(UnityEngine.Random.Range(0, spegelIntervallDict.Count)).Key; //ändra från spegelintervalldict till korrekt med korrekt intervall som finns i förhållande i cirkeln listan!
+//        var hej = förhållandeICirkeln[förhållandeICirkelnKey];
+//        var answer = circleOfFifths[num + förhållandeICirkeln[förhållandeICirkelnKey] % circleOfFifths.Length -1];
+//        currentDictionary = currentDict;
+//        title.text = titleText;
+//        Nollställ();
+//        OnClick();
+//    });
+//    var.transform.position = pos;
+//}
+
 
 
 
 //kvinter = durKvinter.Concat(mollKvinter).ToDictionary(x => x.Key, x => x.Value);
 //förtecken = durFörtecken.Concat(mollFörtecken).ToDictionary(x => x.Key, x => x.Value);
+
+
